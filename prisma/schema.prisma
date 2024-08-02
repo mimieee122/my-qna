@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// QnA 게시판
+
+model User {
+  idx       Int      @id @default(autoincrement())
+  email  String?  @db.VarChar(100)
+  password  String   @db.VarChar(100)
+  name  String?  @db.VarChar(100)
+  phone    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  Question Question[]
+  Answer Answer[]
+}
+
+model Question{
+  idx      Int      @id @default(autoincrement())
+  title    String   @db.VarChar(100)
+  content  String   @db.Text
+  userIdx  Int
+  like     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  whichuser User @relation(fields: [userIdx], references: [idx])
+  Answer Answer[]
+  @@index([userIdx], map: "Question_userIdx_fkey")
+}
+
+model Answer {
+  idx      Int      @id @default(autoincrement())
+  content  String   @db.Text
+  questionIdx Int
+  userIdx  Int
+  like     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  whichquestion Question @relation(fields: [questionIdx], references: [idx])
+  whichuser User @relation(fields: [userIdx], references: [idx])
+  @@index([questionIdx], map: "Answer_questionIdx_fkey")
+  @@index([userIdx], map: "Answer_userIdx_fkey")
+}
