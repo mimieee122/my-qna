@@ -1,13 +1,31 @@
 import { create } from 'domain'
 import type { NextApiRequest, NextApiResponse } from 'next'
-import { createUser } from '@/apis/users/createUser'
-import { verify } from 'jsonwebtoken'
+import { deleteUser } from '@/apis/users/deleteUser'
+import { updateUser } from '@/apis/users/updateUser'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
+    const { idx } = req.query
+    const userIdx = Number(idx)
+
+    // userIdx 데이터 베이스에 존재하는지 확인
+    const user = await prisma.user.findUnique({
+        where: {
+            idx: userIdx,
+        },
+    })
+    if (!user) {
+        return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' })
+    }
+
     try {
-        if (req.method === 'POST') {
-            // 회원가입
-            await createUser(req, res)
+        if (req.method === 'PUT') {
+            // 회원 수정
+            await updateUser(userIdx, req, res)
+        } else if (req.method === 'DELETE') {
+            await deleteUser(req, res)
         } else {
             res.status(400).json({
                 message: '지원하지 않는 메서드입니다.',
