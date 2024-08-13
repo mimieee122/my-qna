@@ -4,6 +4,10 @@ import { hash } from 'bcrypt'
 
 const prisma = new PrismaClient()
 
+const jwt = require('jsonwebtoken')
+
+const secretKey = 'mySecretKey'
+
 /**
  * @swagger
  * /api/users:
@@ -32,7 +36,7 @@ const prisma = new PrismaClient()
  */
 
 export const createUser = async (req: NextApiRequest, res: NextApiResponse) => {
-    const { name, password, email } = req.body
+    const { name, password, email, phone } = req.body
 
     if (!name || !password || !email) {
         return res.status(400).json({
@@ -47,8 +51,14 @@ export const createUser = async (req: NextApiRequest, res: NextApiResponse) => {
             password: hashedPassword,
             email: email,
             name: name,
+            phone: phone || null,
         },
     })
 
-    res.status(200).json({ status: 'success', idx: users.idx })
+    // JWT 생성
+    const token = jwt.sign({ id: users.idx, email: users.email }, secretKey, {
+        expiresIn: '1h',
+    })
+
+    res.status(200).json({ status: 'success', idx: users.idx, token })
 }
